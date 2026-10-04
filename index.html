@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#111827" />
+  <meta name="description" content="Browse community reports of Grand Theft Auto V bugs and version-specific glitches." />
+  <title>GTA V Bug Archive</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="archive.css" />
+  <script src="viewer.js" defer></script>
+</head>
+<body>
+  <main class="archive" id="top">
+    <header class="archive-header">
+      <div class="archive-brand">
+        <div class="brand-line"><span class="brand-mark" aria-hidden="true">V</span><h1 id="page-title">GTA V Bug Archive</h1></div>
+        <p class="archive-subtitle">Online Archive Viewer</p>
+        <p class="archive-links">bug index <span>·</span> patch history <span>·</span> community reports <span>·</span> video archive</p>
+      </div>
+    </header>
+
+    <nav class="category-nav" aria-label="Bug categories">
+      <button class="nav-item active" type="button" data-category="all">All reports <span id="all-count">00</span></button>
+      <button class="nav-item" type="button" data-category="universal">Universal</button>
+      <button class="nav-item" type="button" data-category="online">GTA Online</button>
+      <button class="nav-item" type="button" data-category="story">Story mode</button>
+    </nav>
+
+    <section class="archive-tools" aria-label="Filter bug reports">
+      <div class="toolbar-row">
+        <div class="version-filters" id="version-filters" aria-label="Filter by confirmed patch">
+          <span class="filter-caption">PATCH</span>
+          <button class="version-chip selected" type="button" data-version="all">All</button>
+          <button class="version-chip" type="button" data-version="1.70">1.70</button>
+          <button class="version-chip" type="button" data-version="1.69">1.69</button>
+          <button class="version-chip" type="button" data-version="1.68">1.68</button>
+          <button class="version-chip" type="button" data-version="older">Older</button>
+        </div>
+        <label class="search-box"><span aria-hidden="true">⌕</span><input id="search-input" type="search" placeholder="Search reports" autocomplete="off" /><kbd>/</kbd></label>
+        <label class="sort-control">SORT BY<select id="sort-select" aria-label="Sort reports"><option value="recent">Recently added</option><option value="version-desc">Latest confirmed patch</option><option value="version-asc">Oldest confirmed patch</option><option value="title">Title A–Z</option></select></label>
+      </div>
+      <div class="platform-list" id="platform-filters" aria-label="Filter by platform">
+        <span class="filter-caption">PLATFORM</span>
+        <label><input type="checkbox" value="ps5" /><span class="checkmark"></span> PS5 / Xbox Series</label>
+        <label><input type="checkbox" value="ps4" /><span class="checkmark"></span> PS4 / Xbox One</label>
+        <label><input type="checkbox" value="pc" /><span class="checkmark"></span> PC</label>
+        <label><input type="checkbox" value="legacy" /><span class="checkmark"></span> PS3 / Xbox 360</label>
+      </div>
+    </section>
+
+    <section class="catalog" aria-labelledby="catalog-title">
+      <div class="catalog-heading"><h2 id="catalog-title">Bug reports <span id="result-count">00</span></h2><span class="catalog-note">Community reports · verify build before testing</span></div>
+      <p class="load-error" id="load-error" role="alert" hidden></p>
+      <div class="table-shell">
+        <div class="table-header" aria-hidden="true"><span>REPORT</span><span>MODE</span><span>PATCH BUILDS</span><span>PLATFORMS</span><span>STATUS</span><span>VIDEO</span></div>
+        <div class="bug-grid" id="bug-grid" aria-live="polite"></div>
+      </div>
+      <div class="empty-state" id="empty-state" hidden><span class="empty-mark">∅</span><h3>No reports found</h3><p>Try another search or clear a filter.</p><button id="clear-filters" type="button">Clear filters</button></div>
+      <footer class="page-footer"><span>GTA V BUG ARCHIVE · UNOFFICIAL COMMUNITY PROJECT</span><span>NOT AFFILIATED WITH ROCKSTAR GAMES</span></footer>
+    </section>
+  </main>
+
+</body>
+</html>
