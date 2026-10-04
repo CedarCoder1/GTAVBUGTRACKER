@@ -1,4 +1,3 @@
-const versionRank = { "1.70": 170, "1.69": 169, "1.68": 168, "1.67": 167, "1.66": 166, older: 100 };
 const categoryNames = { universal: "Universal", online: "GTA Online", story: "Story mode" };
 const platformNames = { ps5: "PS5 / Series", ps4: "PS4 / One", pc: "PC", legacy: "PS3 / 360" };
 let reports = [];
@@ -6,6 +5,7 @@ let activeCategory = "all";
 let activeVersion = "all";
 const grid = document.querySelector("#bug-grid");
 const emptyState = document.querySelector("#empty-state");
+const versionFilters = document.querySelector("#version-filters");
 
 function element(tag, className, text) {
   const node = document.createElement(tag);
@@ -14,6 +14,29 @@ function element(tag, className, text) {
   return node;
 }
 function parseReports(text) { return text.trim() ? JSON.parse(text) : []; }
+function compareVersions(first, second) {
+  if (first === "older") return second === "older" ? 0 : -1;
+  if (second === "older") return 1;
+  const firstParts = first.match(/\d+/g)?.map(Number) ?? [];
+  const secondParts = second.match(/\d+/g)?.map(Number) ?? [];
+  for (let index = 0; index < Math.max(firstParts.length, secondParts.length); index += 1) {
+    const difference = (firstParts[index] ?? 0) - (secondParts[index] ?? 0);
+    if (difference) return difference;
+  }
+  return first.localeCompare(second);
+}
+function renderVersionFilters() {
+  const versions = [...new Set(reports.flatMap((report) => report.versions ?? []).filter(Boolean))].sort(compareVersions);
+  const allButton = versionFilters.querySelector('[data-version="all"]');
+  versionFilters.replaceChildren(versionFilters.querySelector(".filter-caption"), allButton);
+  versions.forEach((version) => {
+    const button = element("button", `version-chip ${activeVersion === version ? "selected" : ""}`, version === "older" ? "Older builds" : version);
+    button.type = "button";
+    button.dataset.version = version;
+    versionFilters.append(button);
+  });
+  allButton.classList.toggle("selected", activeVersion === "all");
+}
 function youtubeId(value) {
   try {
     const url = new URL(value);
@@ -34,7 +57,7 @@ function renderReport(report, index) {
   if (report.example) details.append(element("span", "sample-tag", "Example record"));
   const mode = element("div", `category-tag ${report.category}`, categoryNames[report.category] ?? "Uncategorized");
   const patches = element("div", "patch-list");
-  [...(report.versions ?? [])].sort((a, b) => (versionRank[b] ?? Number.parseFloat(b) * 100) - (versionRank[a] ?? Number.parseFloat(a) * 100)).forEach((version, i) => {
+  [...(report.versions ?? [])].sort((a, b) => compareVersions(b, a)).forEach((version, i) => {
     patches.append(element("span", `patch-tag ${i === 0 ? "latest" : ""}`, version === "older" ? "Older builds" : version));
   });
   if (!report.versions?.length) patches.append(element("span", "patch-tag", "Version unknown"));
@@ -75,7 +98,7 @@ function visibleReports() {
   const sort = document.querySelector("#sort-select").value;
   const visible = reports.filter((report) => {
     const modeMatch = activeCategory === "all" || report.category === activeCategory;
-    const versionMatch = activeVersion === "all" || (activeVersion === "older" ? (report.versions ?? []).some((version) => (versionRank[version] ?? 0) < 168) : (report.versions ?? []).includes(activeVersion));
+    const versionMatch = activeVersion === "all" || (report.versions ?? []).includes(activeVersion);
     const platformMatch = platforms.length === 0 || platforms.some((platform) => (report.platforms ?? []).includes(platform));
     const searchMatch = !query || `${report.title} ${report.description} ${categoryNames[report.category]} ${(report.versions ?? []).join(" ")}`.toLowerCase().includes(query);
     return modeMatch && versionMatch && platformMatch && searchMatch;
@@ -83,8 +106,8 @@ function visibleReports() {
   visible.sort((a, b) => {
     if (sort === "title") return a.title.localeCompare(b.title);
     if (sort === "version-desc" || sort === "version-asc") {
-      const newest = (report) => Math.max(0, ...(report.versions ?? []).map((version) => versionRank[version] ?? Number.parseFloat(version) * 100));
-      return (newest(b) - newest(a)) * (sort === "version-desc" ? 1 : -1);
+      const newest = (report) => [...(report.versions ?? [])].sort(compareVersions).at(-1) ?? "";
+      return compareVersions(newest(b), newest(a)) * (sort === "version-desc" ? 1 : -1);
     }
     return (b.created ?? 0) - (a.created ?? 0);
   });
@@ -102,11 +125,13 @@ document.querySelectorAll(".nav-item").forEach((button) => button.addEventListen
   document.querySelectorAll(".nav-item").forEach((item) => item.classList.toggle("active", item === button));
   render();
 }));
-document.querySelectorAll(".version-chip").forEach((button) => button.addEventListener("click", () => {
+versionFilters.addEventListener("click", (event) => {
+  const button = event.target.closest(".version-chip");
+  if (!button) return;
   activeVersion = button.dataset.version;
   document.querySelectorAll(".version-chip").forEach((item) => item.classList.toggle("selected", item === button));
   render();
-}));
+});
 document.querySelectorAll("#platform-filters input").forEach((input) => input.addEventListener("change", render));
 document.querySelector("#search-input").addEventListener("input", render);
 document.querySelector("#sort-select").addEventListener("change", render);
@@ -121,7 +146,7 @@ document.querySelector("#clear-filters").addEventListener("click", () => {
 });
 fetch("./bugs.json")
   .then((response) => { if (!response.ok) throw new Error(`Could not load bugs.json (${response.status}).`); return response.text(); })
-  .then((text) => { const data = parseReports(text); if (!Array.isArray(data)) throw new Error("bugs.json must contain a JSON array."); reports = data; render(); })
+  .then((text) => { const data = parseReports(text); if (!Array.isArray(data)) throw new Error("bugs.json must contain a JSON array."); reports = data; renderVersionFilters(); render(); })
   .catch((error) => {
     document.querySelector("#load-error").hidden = false;
     document.querySelector("#load-error").textContent = `${error.message} Serve this folder over HTTP to load the data file.`;
